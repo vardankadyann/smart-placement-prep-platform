@@ -1,64 +1,77 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { BarChart3, FileText, MessageSquare, Layers } from "lucide-react";
-import { api, type Analytics } from "@/lib/api";
-import { Skeleton } from "@/components/ui/skeleton";
-
-const statCards = [
-  { key: "total_documents" as const, label: "Documents", icon: FileText },
-  { key: "total_chunks" as const, label: "Chunks", icon: Layers },
-  { key: "total_sessions" as const, label: "Chat sessions", icon: MessageSquare },
-  { key: "total_messages" as const, label: "Messages", icon: BarChart3 },
-];
+import { PageHeader, LoadingGrid } from "@/components/dashboard/shared";
+import { ProgressLineChart, SkillBarChart } from "@/components/dashboard/charts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AnalyticsPage() {
-  const [data, setData] = useState<Analytics | null>(null);
+  const [data, setData] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api
-      .getAnalytics()
-      .then(setData)
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
+    fetch("/api/analytics").then((r) => r.json()).then(setData).finally(() => setLoading(false));
   }, []);
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold">Analytics</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Overview of your knowledge base and conversations
-      </p>
+  if (loading) return <><PageHeader title="Analytics Dashboard" /><LoadingGrid /></>;
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((card, i) => {
-          const Icon = card.icon;
-          const value = data?.[card.key] ?? 0;
-          return (
-            <motion.div
-              key={card.key}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-              className="glass-card p-6"
-            >
-              {loading ? (
-                <Skeleton className="h-20 w-full" />
-              ) : (
-                <>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{card.label}</span>
-                    <Icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <p className="mt-4 text-3xl font-bold">{value}</p>
-                </>
-              )}
-            </motion.div>
-          );
-        })}
+  const skillDistribution = (data?.skillDistribution as { skill: string; value: number }[]) ?? [];
+  const progressOverTime = (data?.progressOverTime as { date: string; score: number }[]) ?? [];
+  const resumeTrends = (data?.resumeTrends as { date: string; resumeScore: number; atsScore: number }[]) ?? [];
+
+  return (
+    <>
+      <PageHeader title="Analytics Dashboard" description="Track skill distribution, progress, and performance trends" />
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle>Skill Distribution</CardTitle></CardHeader>
+          <CardContent>
+            {skillDistribution.length > 0 ? (
+              <SkillBarChart data={skillDistribution} />
+            ) : (
+              <p className="py-12 text-center text-sm text-muted-foreground">Complete your profile to see skills</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>Progress Over Time</CardTitle></CardHeader>
+          <CardContent>
+            {progressOverTime.length > 0 ? (
+              <ProgressLineChart data={progressOverTime} />
+            ) : (
+              <p className="py-12 text-center text-sm text-muted-foreground">Activity will appear here as you use modules</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>Resume Improvement Trends</CardTitle></CardHeader>
+          <CardContent>
+            {resumeTrends.length > 0 ? (
+              <ProgressLineChart data={resumeTrends.map((r) => ({ date: r.date, score: r.resumeScore ?? 0 }))} />
+            ) : (
+              <p className="py-12 text-center text-sm text-muted-foreground">Upload resumes to track improvement</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>Roadmap Completion</CardTitle></CardHeader>
+          <CardContent>
+            {((data?.roadmapCompletion as unknown[]) ?? []).length > 0 ? (
+              <ul className="space-y-2">
+                {((data?.roadmapCompletion as { title: string; completionPct: number; duration: number }[]) ?? []).map((r, i) => (
+                  <li key={i} className="flex justify-between text-sm">
+                    <span>{r.title}</span>
+                    <span className="text-muted-foreground">{r.completionPct}% complete</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="py-12 text-center text-sm text-muted-foreground">Generate a roadmap to track completion</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </>
   );
 }

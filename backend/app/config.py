@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     rate_limit_window_seconds: int = 60
 
     gemini_model: str = "gemini-2.5-flash"
-    embedding_model: str = "models/text-embedding-004"
+    embedding_model: str = "models/embedding-001"
 
     chunk_size: int = 800
     chunk_overlap: int = 150
@@ -52,3 +52,5 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+settings = Settings()
+print("GOOGLE_API_KEY LOADED:", bool(settings.google_api_key))

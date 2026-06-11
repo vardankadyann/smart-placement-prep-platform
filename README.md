@@ -1,145 +1,118 @@
-# TeachAI — AI Teaching Assistant
+# AI Placement Copilot
 
-Production-grade educational assistant powered by **Gemini 2.5 Flash**, **Gemini Embeddings**, a **persistent vector store**, and an advanced **RAG** pipeline.
+**Your Personal AI Career Mentor for Placements, Internships, and Job Preparation**
+
+Production-ready SaaS platform for complete AI-powered career preparation — not just interview questions, but a full ecosystem.
 
 ![Stack](https://img.shields.io/badge/Next.js-15-black)
-![Stack](https://img.shields.io/badge/FastAPI-Python-009688)
-![Stack](https://img.shields.io/badge/Gemini-2.5_Flash-4285F4)
+![Stack](https://img.shields.io/badge/PostgreSQL-Prisma-336791)
+![Stack](https://img.shields.io/badge/Clerk-Auth-6C47FF)
+![Stack](https://img.shields.io/badge/AI-Claude_%2B_OpenAI-412991)
 
-## Features
+## Features (15 Modules)
 
-- **Landing page** — SaaS-quality marketing site with hero, features, how-it-works, CTA
-- **Dashboard** — Sidebar navigation (Chat, Upload, Knowledge Base, Analytics, Settings)
-- **Chat** — Streaming SSE, markdown, code copy, citations, sources panel, chat history
-- **Upload** — Drag-and-drop PDF with progress and processing status
-- **Knowledge Base** — List/search/delete documents with chunk counts
-- **Advanced RAG** — Query rewriting, hybrid search (vector + BM25), re-ranking, context compression, conversation memory, metadata filtering, multi-document retrieval, source citations
-- **Teaching mode** — Simple explanations, examples, analogies, summaries, quizzes; grounded-only answers
+| Module | Description |
+|--------|-------------|
+| **User Profile** | Student profile with skill/career profile and readiness score |
+| **Resume Analyzer** | PDF/DOCX upload, ATS score, strengths/weaknesses, recruiter review |
+| **JD Analyzer** | Required/hidden skills, interview focus, hiring priorities |
+| **Resume vs JD Match** | Match score, selection probability, improvement suggestions |
+| **Skill Gap Analysis** | Prioritized learning gaps (Critical → Low) |
+| **AI Learning Roadmap** | 30/60/90-day plans with resources, projects, milestones |
+| **Interview Coach** | Technical, HR, behavioral questions with sample answers |
+| **Voice Mock Interview** | Speech-to-text + AI evaluation scores |
+| **Coding Prep** | DSA problems + Judge0 evaluation + complexity analysis |
+| **Aptitude Prep** | Quantitative, logical, verbal with company-specific questions |
+| **Behavioral Analysis** | STAR framework scoring |
+| **Career Mentor Chat** | AI assistant with conversation memory |
+| **Readiness Dashboard** | Overall score with radar charts |
+| **Gamification** | XP, badges, streaks, leaderboard |
+| **Analytics** | Progress trends, skill distribution, performance graphs |
 
-## Project structure
+## AI Agent Architecture
 
-```
-ai-teaching-assistant/
-├── backend/
-│   ├── app/
-│   │   ├── main.py              # FastAPI app
-│   │   ├── config.py            # Settings
-│   │   ├── api/routes/          # chat, documents, analytics
-│   │   ├── services/
-│   │   │   ├── rag/             # pipeline, hybrid search, reranker, etc.
-│   │   │   ├── chroma_store.py
-│   │   │   ├── embeddings.py
-│   │   │   └── document_processor.py
-│   │   └── utils/               # PDF, chunking, sanitize
-│   ├── requirements.txt
-│   └── run.py
-├── frontend/
-│   └── src/
-│       ├── app/                 # Next.js App Router pages
-│       ├── components/          # UI, chat, landing, layout
-│       └── lib/api.ts           # API client + streaming
-├── .env.example
-└── README.md
-```
+8 specialized agents orchestrated via `src/lib/ai/orchestrator.ts`:
 
-## Prerequisites
+- Resume Agent · JD Agent · Skill Gap Agent · Roadmap Agent
+- Interview Agent · Coding Coach Agent · Career Mentor Agent · Evaluation Agent
 
-- **Node.js** 18+ and npm
-- **Python** 3.11+
-- **Google AI API key** — [Get one here](https://aistudio.google.com/apikey)
+## Tech Stack
 
-## Quick start (Windows)
+- **Frontend:** Next.js 15, React, TypeScript, Tailwind CSS, ShadCN UI, Framer Motion, Recharts
+- **Backend:** Next.js API Routes
+- **Database:** PostgreSQL + Prisma ORM
+- **Auth:** Clerk
+- **AI:** Claude API + OpenAI API
+- **Storage:** UploadThing
+- **Coding:** Judge0 API
+- **Deploy:** Vercel
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL database
+- [Clerk](https://clerk.com) account
+- [Anthropic](https://anthropic.com) or [OpenAI](https://openai.com) API key
+
+### Setup
 
 ```powershell
-cd ai-teaching-assistant
-.\scripts\setup.ps1          # installs Python + Node deps
-# Edit .env → set GOOGLE_API_KEY=your_key
-.\scripts\start.ps1          # opens backend + frontend
-```
-
-- **Frontend:** http://localhost:3000  
-- **Backend API:** http://localhost:8000  
-- **API docs:** http://localhost:8000/docs  
-
-## Manual setup
-
-### 1. Configure environment
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and set `GOOGLE_API_KEY` from [Google AI Studio](https://aistudio.google.com/apikey).
-
-### 2. Backend
-
-```bash
-cd backend
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-pip install -r requirements.txt
-python run.py
-```
-
-### 3. Frontend
-
-```bash
 cd frontend
+cp .env.local.example .env.local
+# Edit .env.local with your keys
+
 npm install
+npx prisma db push
 npm run dev
 ```
 
-## API endpoints
+Open **http://localhost:3000**
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Health check |
-| POST | `/api/chat/sessions` | Create chat session |
-| GET | `/api/chat/sessions` | List sessions |
-| GET | `/api/chat/sessions/{id}` | Get session messages |
-| DELETE | `/api/chat/sessions/{id}` | Delete session |
-| POST | `/api/chat/stream` | Stream chat (SSE) |
-| GET | `/api/documents` | List documents |
-| GET | `/api/documents/search?q=` | Search documents |
-| POST | `/api/documents/upload` | Upload PDF |
-| DELETE | `/api/documents/{id}` | Delete document |
-| GET | `/api/analytics` | Usage analytics |
+### Environment Variables
 
-## RAG pipeline
+See `frontend/.env.local.example` for all required variables:
 
-1. **Upload PDF** → validate file type and size  
-2. **Extract text** → PyPDF  
-3. **Recursive chunking** → overlapping segments  
-4. **Generate embeddings** → Gemini `text-embedding-004`  
-5. **Store in ChromaDB** → persistent vector store  
-6. **Question answering**:
-   - Query rewriting (with conversation context)
-   - Hybrid search (vector + BM25 keyword)
-   - LLM re-ranking
-   - Context compression
-   - Gemini 2.5 Flash streaming response with citations
+- `DATABASE_URL` — PostgreSQL connection string
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY`
+- `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`
+- `UPLOADTHING_TOKEN` — for resume uploads
+- `JUDGE0_API_KEY` — optional, for coding evaluation
+
+## Project Structure
+
+```
+frontend/
+├── prisma/schema.prisma       # Complete database schema
+├── src/
+│   ├── app/
+│   │   ├── page.tsx           # Landing page
+│   │   ├── dashboard/         # 15 module pages
+│   │   └── api/               # REST API routes
+│   ├── lib/
+│   │   ├── ai/agents/         # 8 AI agents
+│   │   ├── ai/orchestrator.ts # Agent orchestration
+│   │   └── services/          # Judge0, XP, resume parser
+│   └── components/            # UI, landing, dashboard, charts
+```
+
+## Deployment (Vercel)
+
+1. Push to GitHub
+2. Import in Vercel
+3. Set root directory to `frontend`
+4. Add environment variables
+5. Connect PostgreSQL (Neon, Supabase, or Railway)
+6. Run `npx prisma db push` against production DB
 
 ## Security
 
-- PDF-only file validation and size limits  
-- Rate limiting on `/health` (extend to other routes in production)  
-- Input sanitization (bleach) on chat messages  
-- Global exception handler (no stack traces leaked)  
-- CORS restricted to configured origins  
-
-## Teaching mode behavior
-
-The assistant explains concepts simply, provides examples and analogies, and can generate quizzes — **only from retrieved context**. If the answer is not in the uploaded material:
-
-> I couldn't find this information in the uploaded material.
-
-## Production notes
-
-- Replace in-memory `ConversationMemory` with Redis or PostgreSQL  
-- Add authentication (OAuth/JWT) before deploying publicly  
-- Run backend with gunicorn + uvicorn workers  
-- Deploy frontend to Vercel; backend to Cloud Run, Railway, or similar  
-- Set `CORS_ORIGINS` to your production domain  
+- Clerk authentication on all dashboard/API routes
+- Rate limiting on API endpoints
+- Zod input validation
+- Secure file upload via UploadThing
+- Environment variables for all secrets
 
 ## License
 

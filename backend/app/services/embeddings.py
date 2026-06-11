@@ -8,6 +8,7 @@ from app.config import Settings
 class EmbeddingService:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
+        print("API KEY START:", settings.google_api_key[:10])
         genai.configure(api_key=settings.google_api_key)
 
     def embed_texts(self, texts: list[str]) -> list[list[float]]:

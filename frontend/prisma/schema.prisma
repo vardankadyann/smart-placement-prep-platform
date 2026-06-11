@@ -1,0 +1,332 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  clerkId       String   @unique
+  email         String   @unique
+  name          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  profile       Profile?
+  resumes       Resume[]
+  jobDescriptions JobDescription[]
+  roadmaps      Roadmap[]
+  interviews    Interview[]
+  codingTests   CodingTest[]
+  skillAssessments SkillAssessment[]
+  progress      ProgressTracking[]
+  achievements  UserAchievement[]
+  chatHistory   ChatMessage[]
+  notifications Notification[]
+  matches       ResumeJdMatch[]
+  skillGaps     SkillGapAnalysis[]
+  voiceInterviews VoiceInterview[]
+  aptitudeTests AptitudeTest[]
+  behavioralTests BehavioralTest[]
+
+  xp            Int      @default(0)
+  level         Int      @default(1)
+  streak        Int      @default(0)
+  lastActiveAt  DateTime @default(now())
+}
+
+model Profile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college           String?
+  branch            String?
+  year              String?
+  cgpa              Float?
+  skills            String[] @default([])
+  preferredRoles    String[] @default([])
+  preferredCompanies String[] @default([])
+  skillProfile      Json?
+  careerProfile     Json?
+  readinessScore    Float    @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Resume {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName        String
+  fileUrl         String
+  fileType        String
+  rawText         String?  @db.Text
+  extractedData   Json?
+  resumeScore     Float?
+  atsScore        Float?
+  strengths       String[] @default([])
+  weaknesses      String[] @default([])
+  missingKeywords String[] @default([])
+  improvements    String[] @default([])
+  projectAnalysis Json?
+  recruiterReview Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  matches         ResumeJdMatch[]
+}
+
+model JobDescription {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName       String
+  jobRole           String
+  description       String   @db.Text
+  requiredSkills    String[] @default([])
+  hiddenSkills      String[] @default([])
+  technicalSkills   String[] @default([])
+  softSkills        String[] @default([])
+  atsKeywords       String[] @default([])
+  interviewFocus    String[] @default([])
+  expectedDifficulty String?
+  hiringPriorities  String[] @default([])
+  analysisData      Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  matches           ResumeJdMatch[]
+  skillGaps         SkillGapAnalysis[]
+  roadmaps          Roadmap[]
+}
+
+model ResumeJdMatch {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resumeId              String
+  resume                Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  jobDescriptionId      String
+  jobDescription        JobDescription @relation(fields: [jobDescriptionId], references: [id], onDelete: Cascade)
+  matchScore            Float
+  strongMatches         String[] @default([])
+  partialMatches        String[] @default([])
+  missingSkills         String[] @default([])
+  missingProjects       String[] @default([])
+  missingKeywords       String[] @default([])
+  improvementSuggestions String[] @default([])
+  selectionProbability  Float?
+  analysisData          Json?
+  createdAt             DateTime @default(now())
+}
+
+model SkillGapAnalysis {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobDescriptionId    String?
+  jobDescription      JobDescription? @relation(fields: [jobDescriptionId], references: [id], onDelete: SetNull)
+  gapScore            Float
+  missingTechnical    String[] @default([])
+  missingSoft         String[] @default([])
+  missingCertifications String[] @default([])
+  missingProjects     String[] @default([])
+  learningPriorities  Json?
+  analysisData        Json?
+  createdAt           DateTime @default(now())
+}
+
+model Roadmap {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobDescriptionId String?
+  jobDescription  JobDescription? @relation(fields: [jobDescriptionId], references: [id], onDelete: SetNull)
+  duration        Int
+  title           String
+  weeks           Json
+  milestones      Json?
+  expectedOutcomes String[] @default([])
+  completionPct   Float    @default(0)
+  status          String   @default("active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Interview {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            String
+  company         String?
+  role            String?
+  difficulty      String?
+  questions       Json
+  status          String   @default("pending")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  results         InterviewResult[]
+}
+
+model InterviewResult {
+  id              String   @id @default(cuid())
+  interviewId     String
+  interview       Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  questionIndex   Int
+  question        String   @db.Text
+  userAnswer      String?  @db.Text
+  sampleAnswer    String?  @db.Text
+  evaluation      Json?
+  scores          Json?
+  feedback        String?  @db.Text
+  createdAt       DateTime @default(now())
+}
+
+model VoiceInterview {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question            String   @db.Text
+  transcript          String?  @db.Text
+  communicationScore  Float?
+  confidenceScore     Float?
+  technicalScore      Float?
+  clarityScore        Float?
+  overallScore        Float?
+  feedback            String?  @db.Text
+  suggestedAnswer     String?  @db.Text
+  evaluationData      Json?
+  createdAt           DateTime @default(now())
+}
+
+model CodingTest {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category        String
+  difficulty      String
+  title           String
+  description     String   @db.Text
+  starterCode     String?  @db.Text
+  testCases       Json?
+  hints           String[] @default([])
+  createdAt       DateTime @default(now())
+
+  results         CodingResult[]
+}
+
+model CodingResult {
+  id              String   @id @default(cuid())
+  codingTestId    String
+  codingTest      CodingTest @relation(fields: [codingTestId], references: [id], onDelete: Cascade)
+  code            String   @db.Text
+  language          String
+  passed          Boolean  @default(false)
+  score           Float?
+  timeComplexity  String?
+  spaceComplexity String?
+  judgeOutput     Json?
+  aiFeedback      String?  @db.Text
+  createdAt       DateTime @default(now())
+}
+
+model AptitudeTest {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category        String
+  company         String?
+  questions       Json
+  answers         Json?
+  score           Float?
+  totalQuestions  Int
+  correctAnswers  Int      @default(0)
+  createdAt       DateTime @default(now())
+}
+
+model BehavioralTest {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question        String   @db.Text
+  answer          String   @db.Text
+  starScores      Json?
+  overallScore    Float?
+  strengths       String[] @default([])
+  weaknesses      String[] @default([])
+  suggestions     String[] @default([])
+  createdAt       DateTime @default(now())
+}
+
+model SkillAssessment {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category        String
+  score           Float
+  maxScore        Float    @default(100)
+  details         Json?
+  createdAt       DateTime @default(now())
+}
+
+model ProgressTracking {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category        String
+  metric          String
+  value           Float
+  metadata        Json?
+  recordedAt      DateTime @default(now())
+}
+
+model Achievement {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  name            String
+  description     String
+  icon            String
+  xpReward        Int      @default(50)
+  category        String
+
+  users           UserAchievement[]
+}
+
+model UserAchievement {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId   String
+  achievement     Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  earnedAt        DateTime @default(now())
+
+  @@unique([userId, achievementId])
+}
+
+model ChatMessage {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId       String
+  role            String
+  content         String   @db.Text
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([userId, sessionId])
+}
+
+model Notification {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  message         String
+  type            String   @default("info")
+  read            Boolean  @default(false)
+  createdAt       DateTime @default(now())
+}
