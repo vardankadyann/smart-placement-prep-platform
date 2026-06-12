@@ -112,7 +112,7 @@ frontend/
 - Rate limiting on API endpoints
 - Zod input validation
 - Secure file upload via UploadThing
-- Environment variables for all secrets
+
 
 ## License
 
